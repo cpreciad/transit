@@ -1,11 +1,11 @@
 package main
 
 import (
-    grpc "github.com/cpreciad/transit/api/grpc"
-    graphQL "github.com/cpreciad/transit/api/graphql"
+    "fmt"
+    "github.com/cpreciad/transit/request"
 )
 
 func main(){
-    grpc.ApiCall()
-    graphQL.ApiCall()
+    request.Request()
+    return
 }
