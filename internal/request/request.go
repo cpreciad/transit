@@ -9,10 +9,13 @@ import (
 )
 
 const(
-    transitUrl = "http://api.511.org/transit/stops"
     apiKeyEnv = "TRANSIT_DATA_API_KEY"
-    operatorID = "SF"
-    lineID = "N"
+
+    stopsUrl = "http://api.511.org/transit/stops"
+    operatorId = "SF"
+    lineId = "N"
+
+    stopMonitoringUrl = "http://api.511.org/transit/StopMonitoring"
 )
 
 
@@ -25,10 +28,10 @@ func RequestStops() ([]byte, error) {
 
     resp, err := http.Get(url)
     if err != nil{
-        return nil, fmt.Errorf("Request: HTTP protocol error  %s\n", url)
+        return nil, err
     }
     if resp.StatusCode != 200{
-        return nil, fmt.Errorf("Request: bad status code %d\n", resp.StatusCode)
+        return nil, fmt.Errorf("RequestStops: bad status code %d\n", resp.StatusCode)
     }
 
     body, err := io.ReadAll(resp.Body)
@@ -44,8 +47,25 @@ func RequestStops() ([]byte, error) {
 
 // RequestNextArrivals - takes a stop ID and returns a byte slice of next arrivals 
 //                       for the specified stop
-func RequestNextArrivals() ([]byte, error){
-    return nil, nil
+func RequestNextArrivals(stopId string) ([]byte, error){
+    url, err := requestStopMonitoringConstructUrl(stopId)
+    if err != nil{
+        return nil, err
+    }
+
+    resp, err := http.Get(url)
+    if err != nil{
+        return nil, err
+    }
+    if resp.StatusCode != 200{
+        return nil, fmt.Errorf("RequestNextArrivals: bad status code %d\n", resp.StatusCode)
+    }
+
+    body, err := io.ReadAll(resp.Body)
+    body = clean(body)
+    resp.Body.Close()
+
+    return body, nil
 }
 
 func requestStopsConstructUrl() (string, error){
@@ -54,7 +74,20 @@ func requestStopsConstructUrl() (string, error){
         return "", err
     }
 
-    url := fmt.Sprintf("%s?api_key=%s&operator_id=%s&line_id=%s&format=json",transitUrl, apiKey, operatorID, lineID)
+    url := fmt.Sprintf("%s?api_key=%s&operator_id=%s&line_id=%s&format=json",stopsUrl, apiKey, operatorId, lineId)
+    log.Printf("Request: constructed url %s\n", url)
+
+   return url, nil
+
+}
+
+func requestStopMonitoringConstructUrl(stopCode string) (string, error){
+    apiKey, err := requestGetApiKey()
+    if err != nil{
+        return "", err
+    }
+
+    url := fmt.Sprintf("%s?api_key=%s&agency=%s&stopCode=%s&format=json",stopMonitoringUrl, apiKey, operatorId, stopCode)
     log.Printf("Request: constructed url %s\n", url)
 
    return url, nil

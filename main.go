@@ -7,18 +7,29 @@ import (
     "github.com/cpreciad/transit/internal/parser"
 )
 
+
 func main(){
     body, err := request.RequestStops()
     if err != nil{
         log.Fatal(err)
     }
 
-    stopId, err := parser.ParseStopID(body)
-
+    stopIds, err := parser.ParseStopID(body)
     if err != nil{
         log.Fatal(err)
     }
-    log.Println(stopId)
+
+    for _, stopId := range stopIds{
+        body, err := request.RequestNextArrivals(stopId)
+        if err != nil{
+            log.Fatal(err)
+        }
+        _, err = parser.ParseNextArrival(body)
+        if err != nil{
+            log.Fatal(err)
+        }
+    }
+
 }
 
 func writeData(body []byte) error{
