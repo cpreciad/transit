@@ -39,30 +39,30 @@ type Stops struct{
 // stop monitoring data
 
 type StopMonitoringJSON struct{
-    ServiceDelivery ServiceDelivery "json:ServiceDelivery"
+    ServiceDelivery ServiceDelivery `json:"ServiceDelivery"`
 }
 
 type ServiceDelivery struct{
-    StopMonitoringDelivery StopMonitoringDelivery "json:StopMonitoringDelivery"
+    StopMonitoringDelivery StopMonitoringDelivery `json:"StopMonitoringDelivery"`
 }
 
 type StopMonitoringDelivery struct {
-    MonitoredStopVisits []MonitoredStopVisit "json:MonitoredStopVisit"
+    MonitoredStopVisits []MonitoredStopVisit `json:"MonitoredStopVisit"`
 }
 
 type MonitoredStopVisit struct {
-    MonitoredVehicleJourney MonitoredVehicleJourney "json:MonitoredVehicleJourney"
+    MonitoredVehicleJourney MonitoredVehicleJourney `json:"MonitoredVehicleJourney"`
 }
 
 type MonitoredVehicleJourney struct{
-    DirectionRef string "json:DirectionRef"
-    VehicleLocation Location "json:VehicleLocation"
-    MonitoredCall MonitoredCall "json:MonitoredCall"
+    DirectionRef string `json:"DirectionRef"`
+    VehicleLocation Location `json:"VehicleLocation"`
+    MonitoredCall MonitoredCall `json:"MonitoredCall"`
 }
 
 type MonitoredCall struct{
-    StopPointName string "json:StopPointName"
-    ExpectedArrivalTime string "json:ExpectedArrivalTime"
+    StopPointName string `json:"StopPointName"`
+    ExpectedArrivalTime string `json:"ExpectedArrivalTime"`
 }
 
 type ConciseStopInfo struct{
@@ -102,14 +102,17 @@ func ParseStopID(data []byte) ([]string, error){
 
 
 // ParseNextArrival - takes a byte slice and parses the next predicted times for the line
-func ParseNextArrival(data []byte) (ConciseStopInfo, error){
+func ParseNextArrival(data []byte, stopId string) (*ConciseStopInfo, error){
     var stopMonitoringJson StopMonitoringJSON
 
     err := json.Unmarshal(data, &stopMonitoringJson)
     if err != nil{
-        return ConciseStopInfo{}, err
+        return nil, err
     }
     stopInfo := parseRestructureTimes(stopMonitoringJson)
+    if stopInfo == nil{
+        return nil, fmt.Errorf("Parser: no arrivals for the stop ID %s", stopId)
+    }
     return stopInfo, nil
 }
 
@@ -136,7 +139,27 @@ func parseFindStopID(stopsJson StopJSON) []string{
     return stopIds
 }
 
-func parseRestructureTimes(stopMonitoringJson StopMonitoringJSON) ConciseStopInfo{
-    // implement restructuring linked list, return head 
-    return ConciseStopInfo{}
+func parseRestructureTimes(stopMonitoringJson StopMonitoringJSON) *ConciseStopInfo{
+    // need to check for case if there are no entries in MonitoredStopVisit list
+    // seems like there is a max of 3
+
+    dummy := &ConciseStopInfo{}
+    builder := dummy
+
+    MSV := stopMonitoringJson.ServiceDelivery.StopMonitoringDelivery.MonitoredStopVisits
+
+    for _, object := range MSV{
+        builder.Next = &ConciseStopInfo{
+            Name: object.MonitoredVehicleJourney.MonitoredCall.StopPointName,
+            Direction: object.MonitoredVehicleJourney.DirectionRef,
+            ExpectedTime: object.MonitoredVehicleJourney.MonitoredCall.ExpectedArrivalTime,
+            Location: object.MonitoredVehicleJourney.VehicleLocation,
+            Next: nil,
+        }
+
+        builder = builder.Next
+    }
+
+    return dummy.Next
 }
+

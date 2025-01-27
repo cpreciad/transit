@@ -5,7 +5,6 @@ import (
     "fmt"
     "io"
     "os"
-    "log"
 )
 
 const(
@@ -75,7 +74,6 @@ func requestStopsConstructUrl() (string, error){
     }
 
     url := fmt.Sprintf("%s?api_key=%s&operator_id=%s&line_id=%s&format=json",stopsUrl, apiKey, operatorId, lineId)
-    log.Printf("Request: constructed url %s\n", url)
 
    return url, nil
 
@@ -88,7 +86,6 @@ func requestStopMonitoringConstructUrl(stopCode string) (string, error){
     }
 
     url := fmt.Sprintf("%s?api_key=%s&agency=%s&stopCode=%s&format=json",stopMonitoringUrl, apiKey, operatorId, stopCode)
-    log.Printf("Request: constructed url %s\n", url)
 
    return url, nil
 
