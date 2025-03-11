@@ -11,73 +11,14 @@ const (
     coleStopName = "Carl St & Cole St"
 )
 
-// stop data
-type StopJSON struct{
-    Contents Contents
-}
-
-type Contents struct{
-    ResponseTimestamp string
-    DataObjects DataObjects
-}
-
-type DataObjects struct{
-    Id string
-    ScheduledStopPoint []Stops
-}
-
-type Stops struct{
-    Id string
-    Extensions map[string]interface{}
-    Name string
-    Location Location
-    Url string
-    StopType string
-}
-
-
-// stop monitoring data
-
-type StopMonitoringJSON struct{
-    ServiceDelivery ServiceDelivery `json:"ServiceDelivery"`
-}
-
-type ServiceDelivery struct{
-    StopMonitoringDelivery StopMonitoringDelivery `json:"StopMonitoringDelivery"`
-}
-
-type StopMonitoringDelivery struct {
-    MonitoredStopVisits []MonitoredStopVisit `json:"MonitoredStopVisit"`
-}
-
-type MonitoredStopVisit struct {
-    MonitoredVehicleJourney MonitoredVehicleJourney `json:"MonitoredVehicleJourney"`
-}
-
-type MonitoredVehicleJourney struct{
-    DirectionRef string `json:"DirectionRef"`
-    VehicleLocation Location `json:"VehicleLocation"`
-    MonitoredCall MonitoredCall `json:"MonitoredCall"`
-}
-
-type MonitoredCall struct{
-    StopPointName string `json:"StopPointName"`
-    ExpectedArrivalTime string `json:"ExpectedArrivalTime"`
-}
-
 type ConciseStopInfo struct{
-    Name string
+    StopName string
     Direction string
     ExpectedTime string
     Location Location
     Next *ConciseStopInfo
 }
 
-// for both
-type Location struct{
-    Longitude string
-    Latitude string
-}
 
 // ParseStopID - takes a byte slice and a string, parses the stop ID for a given stop name
 func ParseStopID(data []byte) ([]string, error){
@@ -150,7 +91,7 @@ func parseRestructureTimes(stopMonitoringJson StopMonitoringJSON) *ConciseStopIn
 
     for _, object := range MSV{
         builder.Next = &ConciseStopInfo{
-            Name: object.MonitoredVehicleJourney.MonitoredCall.StopPointName,
+            StopName: object.MonitoredVehicleJourney.MonitoredCall.StopPointName,
             Direction: object.MonitoredVehicleJourney.DirectionRef,
             ExpectedTime: object.MonitoredVehicleJourney.MonitoredCall.ExpectedArrivalTime,
             Location: object.MonitoredVehicleJourney.VehicleLocation,

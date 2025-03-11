@@ -25,7 +25,7 @@ func main(){
         log.Fatal(err)
     }
 
-    var inbound, outbound *parser.ConciseStopInfo
+    var inbound, outbound *parser.ConciseStopInfo = nil, nil
     for _, stopId := range stopIds{
         body, err := request.RequestNextArrivals(stopId)
         if err != nil{
@@ -33,12 +33,13 @@ func main(){
         }
         stopInfo, err := parser.ParseNextArrival(body, stopId)
         if err != nil{
-            log.Fatal(err)
-        }
-        if stopInfo.Direction == "IB"{
-            inbound = stopInfo
-        } else if stopInfo.Name == "Duboce St/Noe St/Duboce Park"{
-            outbound = stopInfo
+            log.Println(err)
+        } else{
+            if stopInfo.Direction == "IB"{
+                inbound = stopInfo
+            } else if stopInfo.StopName == "Duboce St/Noe St/Duboce Park"{
+                outbound = stopInfo
+            }
         }
     }
     display(inbound, outbound)
@@ -46,13 +47,17 @@ func main(){
 
 func display(inboundStopInfo *parser.ConciseStopInfo, outboundStopInfo *parser.ConciseStopInfo){
     // display inbound times
-    fmt.Printf("Inbound N line train times for Duboce Stop:\n")
+    if inboundStopInfo != nil{
+        fmt.Printf("Inbound N line train times for Duboce Stop:\n")
+    } else{
+        fmt.Println(" No scheduled trains for Inbound N line Duboce Stops")
+    }
     for stopInfo := inboundStopInfo; stopInfo != nil ; stopInfo = stopInfo.Next{
         t, err := helpers.UTCtoPST(stopInfo.ExpectedTime)
-        formattedTime := convertTime(stopInfo, t)
         if err != nil{
             log.Println(err)
         }
+        formattedTime := convertTime(stopInfo, t)
         if stopInfo.Next == nil{
             fmt.Printf("%s\n\n", formattedTime)
         }else{
@@ -61,13 +66,17 @@ func display(inboundStopInfo *parser.ConciseStopInfo, outboundStopInfo *parser.C
     }
 
     // display outbound times
-    fmt.Printf("Outbound N line train times for Duboce Stop:\n")
+    if outboundStopInfo != nil{
+        fmt.Printf("Outbound N line train times for Duboce Stop:\n")
+    } else{
+        fmt.Println(" No scheduled trains for Outbound N line Duboce Stops")
+    }
     for stopInfo := outboundStopInfo; stopInfo != nil; stopInfo = stopInfo.Next{
         t, err := helpers.UTCtoPST(stopInfo.ExpectedTime)
-        formattedTime := convertTime(stopInfo, t)
         if err != nil{
             log.Println(err)
         }
+        formattedTime := convertTime(stopInfo, t)
         if stopInfo.Next == nil{
             fmt.Printf("%s\n\n", formattedTime)
         }else{

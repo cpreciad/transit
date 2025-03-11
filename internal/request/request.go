@@ -21,6 +21,7 @@ const(
 // RequestStops - returns a byte slice of all stops along the N line
 func RequestStops() ([]byte, error) {
     url, err := requestStopsConstructUrl()
+    fmt.Println(url)
     if err != nil{
         return nil, err
     }
@@ -94,7 +95,7 @@ func requestStopMonitoringConstructUrl(stopCode string) (string, error){
 func requestGetApiKey() (string, error){
     value := os.Getenv(apiKeyEnv)
     if value == ""{
-        return "", fmt.Errorf("Request: %s has not been set", apiKeyEnv)
+        return "", fmt.Errorf("Request: %s env variable has not been set", apiKeyEnv)
     }
     return value, nil
 }
