@@ -13,3 +13,11 @@ export TRANSIT_DATA_API_KEY=<your api key>
 ```
 
 Thats it for now (as of 1-15-2025)
+
+
+This project depends on using go version 1.24.0 at least. This is for the quality of life improvement for using go tools that was released with this version.
+To regenerate the graphql go code, run:
+```
+go tool gqlgen
+```
+Nice! (3-11-25)
