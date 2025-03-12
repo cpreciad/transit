@@ -21,7 +21,6 @@ const(
 // RequestStops - returns a byte slice of all stops along the N line
 func RequestStops() ([]byte, error) {
     url, err := requestStopsConstructUrl()
-    fmt.Println(url)
     if err != nil{
         return nil, err
     }
