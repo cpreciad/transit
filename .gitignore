@@ -24,6 +24,10 @@ go.work.sum
 # env file
 .env
 
+# debug files
+nstops.json
+allstops.json
+
 # misc
 IDEAS.MD
 data/
