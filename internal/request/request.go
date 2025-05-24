@@ -15,6 +15,8 @@ const (
 )
 
 // RequestStops - returns a byte slice of all stops along the N line
+//
+//	should always return nil upon an error, so that backup data isn't malformed
 func RequestStops(operatorId, lineId string) ([]byte, error) {
 	url, err := requestStopsConstructUrl(operatorId, lineId)
 	if err != nil {
@@ -58,6 +60,7 @@ func RequestNextArrivals(operatorId, stopId string) ([]byte, error) {
 	}
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("request: bad status code %d", resp.StatusCode)
+		// read the backup and return that instead
 	}
 
 	body, err := io.ReadAll(resp.Body)
@@ -66,7 +69,7 @@ func RequestNextArrivals(operatorId, stopId string) ([]byte, error) {
 	}
 	body = clean(body)
 	resp.Body.Close()
-
+	// write a successful fetch to backup
 	return body, nil
 }
 
