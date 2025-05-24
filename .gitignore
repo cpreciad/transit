@@ -28,6 +28,9 @@ go.work.sum
 nstops.json
 allstops.json
 
+# backup files
+backups/
+
 # misc
 IDEAS.MD
 data/
