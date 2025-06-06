@@ -9,23 +9,39 @@ import (
 	"fmt"
 
 	"github.com/cpreciad/transit/graph/model"
+	"github.com/cpreciad/transit/internal/consolidator"
 )
 
-// CreateTodo is the resolver for the createTodo field.
-func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
+// Operators is the resolver for the operators field.
+func (r *queryResolver) Operators(ctx context.Context) ([]*model.Operator, error) {
+	panic(fmt.Errorf("not implemented: Operators - operators"))
 }
 
-// Todos is the resolver for the todos field.
-func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todos - todos"))
+// Operator is the resolver for the operator field.
+func (r *queryResolver) Operator(ctx context.Context, id string) (*model.Operator, error) {
+	panic(fmt.Errorf("not implemented: Operator - operator"))
 }
 
-// Mutation returns MutationResolver implementation.
-func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
+// StopsForLine is the resolver for the stopsForLine field.
+func (r *queryResolver) StopsForLine(ctx context.Context, operatorID string, lineID string) ([]*model.Stop, error) {
+	stops := make(map[string][]string)
+	stops["Carl St & Cole St"] = make([]string, 0)
+	stops["Duboce St/Noe St/Duboce Park"] = make([]string, 0)
+	stopInfo := consolidator.GetStopInfo(operatorID, lineID, stops)
+
+	// construct the return for the stops
+	for _, stop := range stopInfo {
+		formattedStop := &model.Stop{
+			ID:   "1",
+			Name: stop.Direction.Outbound.StopName,
+		}
+		r.stops = append(r.stops, formattedStop)
+	}
+	return r.stops, nil
+
+}
 
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
-type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

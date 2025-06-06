@@ -2,25 +2,22 @@
 
 package model
 
-type Mickey struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+type Line struct {
+	ID    string  `json:"id"`
+	Name  string  `json:"name"`
+	Stops []*Stop `json:"stops"`
 }
 
-type Mutation struct {
-}
-
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
+type Operator struct {
+	ID    string  `json:"id"`
+	Name  string  `json:"name"`
+	Lines []*Line `json:"lines"`
 }
 
 type Query struct {
 }
 
-type Todo struct {
-	ID   string  `json:"id"`
-	Text string  `json:"text"`
-	Done bool    `json:"done"`
-	User *Mickey `json:"user"`
+type Stop struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }

@@ -45,7 +45,30 @@ func display(infos []*consolidator.Info) {
 			if err != nil {
 				log.Println(err)
 			}
-			formattedTime := convertTime(t)
+			formattedTime := convertTime(t, false)
+			if stopInfo.Next == nil {
+				fmt.Printf("%s\n\n", formattedTime)
+			} else {
+				fmt.Printf("%s <- ", formattedTime)
+			}
+		}
+	}
+	specialDisplay := func(i *parser.ConciseStopInfo) {
+		special := false
+		if i != nil {
+			if i.StopName == "Carl St & Cole St" {
+				i.StopName = "Duboce St/Noe St/Duboce Park"
+				special = true
+			}
+			fmt.Printf("%s line (%s) train times for %s:\n", i.Line, i.Direction, i.StopName)
+		}
+
+		for stopInfo := i; stopInfo != nil; stopInfo = stopInfo.Next {
+			t, err := helpers.UTCtoPST(stopInfo.ExpectedTime)
+			if err != nil {
+				log.Println(err)
+			}
+			formattedTime := convertTime(t, special)
 			if stopInfo.Next == nil {
 				fmt.Printf("%s\n\n", formattedTime)
 			} else {
@@ -58,17 +81,15 @@ func display(infos []*consolidator.Info) {
 		inboundStopInfo := info.Direction.Inbound
 		outboundStopInfo := info.Direction.Outbound
 		// the only reason this is using a scoped function is because I felt like it
-		localDisplay(inboundStopInfo)
+		specialDisplay(inboundStopInfo)
 		localDisplay(outboundStopInfo)
 	}
 
 }
 
-func convertTime(t time.Time) string {
-	/*
-		if stopInfo.Direction == "IB" {
-			t = t.Add(TunnelTime)
-		}
-	*/
+func convertTime(t time.Time, specialCase bool) string {
+	if specialCase {
+		t = t.Add(TunnelTime)
+	}
 	return t.Format(time.Kitchen)
 }
