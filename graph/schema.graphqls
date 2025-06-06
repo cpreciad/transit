@@ -2,27 +2,25 @@
 #
 # https://gqlgen.com/getting-started/
 
-type Todo {
-  id: ID!
-  text: String!
-  done: Boolean!
-  user: Mickey!
-}
-
-type Mickey {
+type Stop {
   id: ID!
   name: String!
 }
 
+type Line {
+  id: ID!
+  name: String!
+  stops: [Stop!]!
+}
+
+type Operator {
+  id: ID!
+  name: String!
+  lines: [Line!]!
+}
+
 type Query {
-  todos: [Todo!]!
-}
-
-input NewTodo {
-  text: String!
-  userId: String!
-}
-
-type Mutation {
-  createTodo(input: NewTodo!): Todo!
+  operators: [Operator!]!
+  operator(id: ID!): Operator
+  stopsForLine(operatorID: ID!, lineID: ID!): [Stop!]!
 }

@@ -101,7 +101,7 @@ func handleBackup(fileName string, body []byte) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		log.Println("consolidator: backup data for %s loaded successfully", fileName)
+		log.Printf("consolidator: backup data for %s loaded successfully\n", fileName)
 		body = backup
 	}
 	return body, nil
