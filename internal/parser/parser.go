@@ -1,3 +1,4 @@
+// TODO: depreciate this file
 package parser
 
 import (

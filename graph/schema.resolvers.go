@@ -6,20 +6,52 @@ package graph
 
 import (
 	"context"
-	"fmt"
+	log "log/slog"
 
 	"github.com/cpreciad/transit/graph/model"
 	"github.com/cpreciad/transit/internal/consolidator"
+	queryengine "github.com/cpreciad/transit/query_engine"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 // Operators is the resolver for the operators field.
 func (r *queryResolver) Operators(ctx context.Context) ([]*model.Operator, error) {
-	panic(fmt.Errorf("not implemented: Operators - operators"))
+	operators, err := r.queryEngine.GetOperatorID()
+	if err != nil {
+		log.Error("QueryResolver", "Method", "Operator", "Error", err.Error())
+		return nil, gqlerror.Errorf("Internal server error occurred")
+	}
+
+	for opID, op := range operators {
+		r.operators = append(r.operators, &model.Operator{
+			ID:    string(opID),
+			Name:  op.Name,
+			Lines: nil, // TODO: implement recursive calls to Lines
+		})
+	}
+
+	return r.operators, nil
 }
 
 // Operator is the resolver for the operator field.
 func (r *queryResolver) Operator(ctx context.Context, id string) (*model.Operator, error) {
-	panic(fmt.Errorf("not implemented: Operator - operator"))
+
+	operators, err := r.queryEngine.GetOperatorID()
+	if err != nil {
+		log.Error("QueryResolver", "Method", "Operator", "Error", err.Error())
+		return nil, gqlerror.Errorf("Internal server error occurred")
+	}
+
+	operator, ok := operators[queryengine.ID(id)]
+	if !ok {
+		return nil, gqlerror.Errorf("Operator with ID %s could not be found", id)
+	}
+
+	return &model.Operator{
+		ID:    operator.ID,
+		Name:  operator.Name,
+		Lines: nil, // TODO: implement recursive calls to Lines
+	}, nil
 }
 
 // StopsForLine is the resolver for the stopsForLine field.

@@ -1,6 +1,9 @@
 package graph
 
-import "github.com/cpreciad/transit/graph/model"
+import (
+	"github.com/cpreciad/transit/graph/model"
+	queryengine "github.com/cpreciad/transit/query_engine"
+)
 
 //go:generate go run github.com/99designs/gqlgen generate
 
@@ -9,6 +12,8 @@ import "github.com/cpreciad/transit/graph/model"
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	stops []*model.Stop
-	//operators []*model.Operator
+	queryEngine queryengine.QueryEngine
+	stops       []*model.Stop
+	operators   []*model.Operator
+	// the query engine interface should be injected here
 }
