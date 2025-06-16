@@ -22,6 +22,8 @@ func main() {
 		port = defaultPort
 	}
 
+	// this should be where a resolver type should be injected
+
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
 
 	srv.AddTransport(transport.Options{})

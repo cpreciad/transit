@@ -1,3 +1,4 @@
+// TODO: depreciate this file
 package request
 
 import (
@@ -8,8 +9,7 @@ import (
 )
 
 const (
-	apiKeyEnv = "TRANSIT_DATA_API_KEY"
-
+	apiKeyEnv         = "TRANSIT_DATA_API_KEY"
 	stopsUrl          = "http://api.511.org/transit/stops"
 	stopMonitoringUrl = "http://api.511.org/transit/StopMonitoring"
 )
