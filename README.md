@@ -32,3 +32,7 @@ at some point, we'll want to have the data requested from the 511 API to be cach
 If we want to update the database that will store the documents, we could create a task queue, with built in priorities, which would be impressive if it was configurable on usage metrics or user preference of transit.
 
 It will be first good to test the performance of a request vs a database query for the data. Then we could implement caching, but only in front of the method that is fastest
+
+//
+
+gql server is started with `go run server.go`

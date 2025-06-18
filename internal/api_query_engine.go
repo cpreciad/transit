@@ -1,12 +1,15 @@
 package internal
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/cpreciad/transit/internal/helpers"
+	"github.com/cpreciad/transit/internal/model"
 	qe "github.com/cpreciad/transit/query_engine"
 )
 
@@ -49,12 +52,12 @@ func fetchData() ([]byte, error) {
 		return nil, err
 	}
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("apiQueryEngine: fetchData: bad status code returned: %d", resp.StatusCode)
+		return nil, fmt.Errorf("fetchData: bad status code returned: %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("apiQueryEngine: fetchData: %s", err.Error())
+		return nil, fmt.Errorf("fetchData: %s", err.Error())
 	}
 	body = helpers.CleanResponseBody(body)
 	resp.Body.Close()
@@ -63,24 +66,43 @@ func fetchData() ([]byte, error) {
 
 }
 
-func formatApiData(body []byte) (map[qe.ID]qe.Operator, error) {
-	fmt.Println(string(body))
-	// unpack the go object from the operator
+func formatApiData(data []byte) (map[qe.ID]qe.Operator, error) {
+	var unpackedOperators []model.Operator
+	if err := json.Unmarshal(data, &unpackedOperators); err != nil {
+		return nil, fmt.Errorf("formatApiData: %w", err)
+	}
 
-	// validate the unpacked object
+	if err := validate(unpackedOperators); err != nil {
+		return nil, fmt.Errorf("formatApiData: %w", err)
+	}
 
-	// iterate through the go object and format the API data to fit the expected interface return
-	return nil, nil
+	m := make(map[qe.ID]qe.Operator)
+	for i, o := range unpackedOperators {
+		// getting in the habit of using database ids, as this data will eventually be stored there
+		id := qe.ID(strconv.Itoa(i + 1))
+		m[id] = qe.Operator{
+			ID:         string(id),
+			OperatorID: o.OperatorID,
+			Name:       o.Name,
+		}
+	}
+
+	return m, nil
 }
 
 // checks if an API key exists as an error check
 func constructOperatorsUrl() (string, error) {
 	apiKey := os.Getenv(apiKeyEnv)
 	if apiKey == "" {
-		return "", fmt.Errorf("apiQueryEngine: constructOperatorsUrl: %s env variable is not set", apiKeyEnv)
+		return "", fmt.Errorf("constructOperatorsUrl: %s env variable is not set", apiKeyEnv)
 	}
 
 	url := fmt.Sprintf("%s?api_key=%s&format=json", operatorsUrl, apiKey)
 
 	return url, nil
+}
+
+// TODO: find a way to validate the unpacking after a successful unmarshal
+func validate([]model.Operator) error {
+	return nil
 }
