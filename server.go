@@ -11,6 +11,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/cpreciad/transit/graph"
+	"github.com/cpreciad/transit/internal"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -24,7 +25,9 @@ func main() {
 
 	// this should be where a resolver type should be injected
 
-	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
+	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
+		QueryEngine: internal.NewApiQueryEngine(),
+	}}))
 
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})

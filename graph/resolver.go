@@ -12,8 +12,7 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	queryEngine queryengine.QueryEngine
+	QueryEngine queryengine.QueryEngine
 	stops       []*model.Stop
 	operators   []*model.Operator
-	// the query engine interface should be injected here
 }

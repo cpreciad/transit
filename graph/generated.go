@@ -47,31 +47,34 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Line struct {
-		ID    func(childComplexity int) int
-		Name  func(childComplexity int) int
-		Stops func(childComplexity int) int
+		ID     func(childComplexity int) int
+		LineID func(childComplexity int) int
+		Name   func(childComplexity int) int
+		Stops  func(childComplexity int) int
 	}
 
 	Operator struct {
-		ID    func(childComplexity int) int
-		Lines func(childComplexity int) int
-		Name  func(childComplexity int) int
+		ID         func(childComplexity int) int
+		Lines      func(childComplexity int) int
+		Name       func(childComplexity int) int
+		OperatorID func(childComplexity int) int
 	}
 
 	Query struct {
 		Operator     func(childComplexity int, id string) int
-		Operators    func(childComplexity int) int
+		Operators    func(childComplexity int, order *model.SortOrder) int
 		StopsForLine func(childComplexity int, operatorID string, lineID string) int
 	}
 
 	Stop struct {
-		ID   func(childComplexity int) int
-		Name func(childComplexity int) int
+		ID     func(childComplexity int) int
+		Name   func(childComplexity int) int
+		StopID func(childComplexity int) int
 	}
 }
 
 type QueryResolver interface {
-	Operators(ctx context.Context) ([]*model.Operator, error)
+	Operators(ctx context.Context, order *model.SortOrder) ([]*model.Operator, error)
 	Operator(ctx context.Context, id string) (*model.Operator, error)
 	StopsForLine(ctx context.Context, operatorID string, lineID string) ([]*model.Stop, error)
 }
@@ -101,6 +104,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Line.ID(childComplexity), true
+
+	case "Line.lineId":
+		if e.complexity.Line.LineID == nil {
+			break
+		}
+
+		return e.complexity.Line.LineID(childComplexity), true
 
 	case "Line.name":
 		if e.complexity.Line.Name == nil {
@@ -137,6 +147,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Operator.Name(childComplexity), true
 
+	case "Operator.operatorId":
+		if e.complexity.Operator.OperatorID == nil {
+			break
+		}
+
+		return e.complexity.Operator.OperatorID(childComplexity), true
+
 	case "Query.operator":
 		if e.complexity.Query.Operator == nil {
 			break
@@ -154,7 +171,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Operators(childComplexity), true
+		args, err := ec.field_Query_operators_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Operators(childComplexity, args["order"].(*model.SortOrder)), true
 
 	case "Query.stopsForLine":
 		if e.complexity.Query.StopsForLine == nil {
@@ -181,6 +203,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Stop.Name(childComplexity), true
+
+	case "Stop.stopId":
+		if e.complexity.Stop.StopID == nil {
+			break
+		}
+
+		return e.complexity.Stop.StopID(childComplexity), true
 
 	}
 	return 0, false
@@ -333,6 +362,29 @@ func (ec *executionContext) field_Query_operator_argsID(
 	}
 
 	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_operators_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_operators_argsOrder(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["order"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_operators_argsOrder(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*model.SortOrder, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
+	if tmp, ok := rawArgs["order"]; ok {
+		return ec.unmarshalOSortOrder2ᚖgithubᚗcomᚋcpreciadᚋtransitᚋgraphᚋmodelᚐSortOrder(ctx, tmp)
+	}
+
+	var zeroVal *model.SortOrder
 	return zeroVal, nil
 }
 
@@ -521,6 +573,50 @@ func (ec *executionContext) fieldContext_Line_id(_ context.Context, field graphq
 	return fc, nil
 }
 
+func (ec *executionContext) _Line_lineId(ctx context.Context, field graphql.CollectedField, obj *model.Line) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Line_lineId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LineID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Line_lineId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Line",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Line_name(ctx context.Context, field graphql.CollectedField, obj *model.Line) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Line_name(ctx, field)
 	if err != nil {
@@ -606,6 +702,8 @@ func (ec *executionContext) fieldContext_Line_stops(_ context.Context, field gra
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Stop_id(ctx, field)
+			case "stopId":
+				return ec.fieldContext_Stop_stopId(ctx, field)
 			case "name":
 				return ec.fieldContext_Stop_name(ctx, field)
 			}
@@ -654,6 +752,50 @@ func (ec *executionContext) fieldContext_Operator_id(_ context.Context, field gr
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Operator_operatorId(ctx context.Context, field graphql.CollectedField, obj *model.Operator) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Operator_operatorId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OperatorID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Operator_operatorId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Operator",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -744,6 +886,8 @@ func (ec *executionContext) fieldContext_Operator_lines(_ context.Context, field
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Line_id(ctx, field)
+			case "lineId":
+				return ec.fieldContext_Line_lineId(ctx, field)
 			case "name":
 				return ec.fieldContext_Line_name(ctx, field)
 			case "stops":
@@ -769,7 +913,7 @@ func (ec *executionContext) _Query_operators(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Operators(rctx)
+		return ec.resolvers.Query().Operators(rctx, fc.Args["order"].(*model.SortOrder))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -786,7 +930,7 @@ func (ec *executionContext) _Query_operators(ctx context.Context, field graphql.
 	return ec.marshalNOperator2ᚕᚖgithubᚗcomᚋcpreciadᚋtransitᚋgraphᚋmodelᚐOperatorᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_operators(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_operators(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -796,6 +940,8 @@ func (ec *executionContext) fieldContext_Query_operators(_ context.Context, fiel
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Operator_id(ctx, field)
+			case "operatorId":
+				return ec.fieldContext_Operator_operatorId(ctx, field)
 			case "name":
 				return ec.fieldContext_Operator_name(ctx, field)
 			case "lines":
@@ -803,6 +949,17 @@ func (ec *executionContext) fieldContext_Query_operators(_ context.Context, fiel
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Operator", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_operators_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -845,6 +1002,8 @@ func (ec *executionContext) fieldContext_Query_operator(ctx context.Context, fie
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Operator_id(ctx, field)
+			case "operatorId":
+				return ec.fieldContext_Operator_operatorId(ctx, field)
 			case "name":
 				return ec.fieldContext_Operator_name(ctx, field)
 			case "lines":
@@ -908,6 +1067,8 @@ func (ec *executionContext) fieldContext_Query_stopsForLine(ctx context.Context,
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Stop_id(ctx, field)
+			case "stopId":
+				return ec.fieldContext_Stop_stopId(ctx, field)
 			case "name":
 				return ec.fieldContext_Stop_name(ctx, field)
 			}
@@ -1098,6 +1259,50 @@ func (ec *executionContext) fieldContext_Stop_id(_ context.Context, field graphq
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Stop_stopId(ctx context.Context, field graphql.CollectedField, obj *model.Stop) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Stop_stopId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StopID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Stop_stopId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Stop",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3122,6 +3327,11 @@ func (ec *executionContext) _Line(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "lineId":
+			out.Values[i] = ec._Line_lineId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "name":
 			out.Values[i] = ec._Line_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -3168,6 +3378,11 @@ func (ec *executionContext) _Operator(ctx context.Context, sel ast.SelectionSet,
 			out.Values[i] = graphql.MarshalString("Operator")
 		case "id":
 			out.Values[i] = ec._Operator_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "operatorId":
+			out.Values[i] = ec._Operator_operatorId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -3330,6 +3545,11 @@ func (ec *executionContext) _Stop(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = graphql.MarshalString("Stop")
 		case "id":
 			out.Values[i] = ec._Stop_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "stopId":
+			out.Values[i] = ec._Stop_stopId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4187,6 +4407,22 @@ func (ec *executionContext) marshalOOperator2ᚖgithubᚗcomᚋcpreciadᚋtransi
 		return graphql.Null
 	}
 	return ec._Operator(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOSortOrder2ᚖgithubᚗcomᚋcpreciadᚋtransitᚋgraphᚋmodelᚐSortOrder(ctx context.Context, v any) (*model.SortOrder, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.SortOrder)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOSortOrder2ᚖgithubᚗcomᚋcpreciadᚋtransitᚋgraphᚋmodelᚐSortOrder(ctx context.Context, sel ast.SelectionSet, v *model.SortOrder) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v any) (*string, error) {

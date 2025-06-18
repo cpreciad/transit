@@ -2,22 +2,72 @@
 
 package model
 
+import (
+	"fmt"
+	"io"
+	"strconv"
+)
+
 type Line struct {
-	ID    string  `json:"id"`
-	Name  string  `json:"name"`
-	Stops []*Stop `json:"stops"`
+	ID     string  `json:"id"`
+	LineID string  `json:"lineId"`
+	Name   string  `json:"name"`
+	Stops  []*Stop `json:"stops"`
 }
 
 type Operator struct {
-	ID    string  `json:"id"`
-	Name  string  `json:"name"`
-	Lines []*Line `json:"lines"`
+	ID         string  `json:"id"`
+	OperatorID string  `json:"operatorId"`
+	Name       string  `json:"name"`
+	Lines      []*Line `json:"lines"`
 }
 
 type Query struct {
 }
 
 type Stop struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID     string `json:"id"`
+	StopID string `json:"stopId"`
+	Name   string `json:"name"`
+}
+
+type SortOrder string
+
+const (
+	SortOrderAsc  SortOrder = "ASC"
+	SortOrderDesc SortOrder = "DESC"
+)
+
+var AllSortOrder = []SortOrder{
+	SortOrderAsc,
+	SortOrderDesc,
+}
+
+func (e SortOrder) IsValid() bool {
+	switch e {
+	case SortOrderAsc, SortOrderDesc:
+		return true
+	}
+	return false
+}
+
+func (e SortOrder) String() string {
+	return string(e)
+}
+
+func (e *SortOrder) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SortOrder(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SortOrder", str)
+	}
+	return nil
+}
+
+func (e SortOrder) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

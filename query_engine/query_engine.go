@@ -16,7 +16,13 @@ type QueryEngine interface {
 	// GetStopMonintor(sid string)
 }
 
+// for the types being returned by the query engine, there are two ids.
+// One is ID, and it is for DB indexing
+// the other is the specific Id that the 511 API returns as a means for referencing the
+// operator, which will help in other query engine resolutions
+
 type Operator struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID         string `json:"id"`
+	OperatorID string `json:"operatorid"`
+	Name       string `json:"name"`
 }

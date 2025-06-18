@@ -4,23 +4,31 @@
 
 type Stop {
   id: ID!
+  stopId: String!
   name: String!
 }
 
 type Line {
   id: ID!
+  lineId: String!
   name: String!
   stops: [Stop!]!
 }
 
 type Operator {
   id: ID!
+  operatorId: String!
   name: String!
   lines: [Line!]!
 }
 
+enum SortOrder {
+  ASC
+  DESC
+}
+
 type Query {
-  operators: [Operator!]!
+  operators(order: SortOrder = ASC): [Operator!]!
   operator(id: ID!): Operator
   stopsForLine(operatorID: ID!, lineID: ID!): [Stop!]!
 }

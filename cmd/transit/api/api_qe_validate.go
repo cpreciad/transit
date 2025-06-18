@@ -1,8 +1,18 @@
 package main
 
-import "github.com/cpreciad/transit/internal"
+import (
+	"fmt"
+	"log/slog"
 
+	"github.com/cpreciad/transit/internal"
+)
+
+// this is just to test the api query engine implementation
 func main() {
 	apiqe := internal.NewApiQueryEngine()
-	apiqe.GetOperatorID()
+	out, err := apiqe.GetOperatorID()
+	if err != nil {
+		slog.Error("ez error", "returned error:", err.Error())
+	}
+	fmt.Println(out)
 }

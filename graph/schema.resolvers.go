@@ -6,27 +6,51 @@ package graph
 
 import (
 	"context"
-	log "log/slog"
+	"log/slog"
+	"sort"
+	"strconv"
 
 	"github.com/cpreciad/transit/graph/model"
 	"github.com/cpreciad/transit/internal/consolidator"
-	queryengine "github.com/cpreciad/transit/query_engine"
+	qe "github.com/cpreciad/transit/query_engine"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 // Operators is the resolver for the operators field.
-func (r *queryResolver) Operators(ctx context.Context) ([]*model.Operator, error) {
-	operators, err := r.queryEngine.GetOperatorID()
+func (r *queryResolver) Operators(ctx context.Context, order *model.SortOrder) ([]*model.Operator, error) {
+	operators, err := r.QueryEngine.GetOperatorID()
 	if err != nil {
-		log.Error("QueryResolver", "Method", "Operator", "Error", err.Error())
+		slog.Error("QueryResolver", "Method", "Operator", "Error", err.Error())
 		return nil, gqlerror.Errorf("Internal server error occurred")
 	}
+	sortedKeys := make([]qe.ID, 0, len(operators))
+	for i := range operators {
+		sortedKeys = append(sortedKeys, i)
+	}
 
-	for opID, op := range operators {
+	sort.Slice(sortedKeys, func(i, j int) bool {
+		var less bool
+
+		l, _ := strconv.Atoi(string(sortedKeys[i]))
+		r, _ := strconv.Atoi(string(sortedKeys[j]))
+
+		less = l > r
+
+		if *order == model.SortOrderAsc {
+			less = !less
+
+		}
+		return less
+	})
+
+	for _, opID := range sortedKeys {
+		op := operators[opID]
+		slog.Info("op info: ", "id", string(opID), "opID", op.OperatorID, "name", op.Name)
 		r.operators = append(r.operators, &model.Operator{
-			ID:    string(opID),
-			Name:  op.Name,
-			Lines: nil, // TODO: implement recursive calls to Lines
+			ID:         string(opID),
+			OperatorID: op.OperatorID,
+			Name:       op.Name,
+			Lines:      nil, // TODO: implement recursive calls to Lines
 		})
 	}
 
@@ -35,22 +59,22 @@ func (r *queryResolver) Operators(ctx context.Context) ([]*model.Operator, error
 
 // Operator is the resolver for the operator field.
 func (r *queryResolver) Operator(ctx context.Context, id string) (*model.Operator, error) {
-
-	operators, err := r.queryEngine.GetOperatorID()
+	operators, err := r.QueryEngine.GetOperatorID()
 	if err != nil {
-		log.Error("QueryResolver", "Method", "Operator", "Error", err.Error())
+		slog.Error("QueryResolver", "Method", "Operator", "Error", err.Error())
 		return nil, gqlerror.Errorf("Internal server error occurred")
 	}
 
-	operator, ok := operators[queryengine.ID(id)]
+	operator, ok := operators[qe.ID(id)]
 	if !ok {
 		return nil, gqlerror.Errorf("Operator with ID %s could not be found", id)
 	}
 
 	return &model.Operator{
-		ID:    operator.ID,
-		Name:  operator.Name,
-		Lines: nil, // TODO: implement recursive calls to Lines
+		ID:         operator.ID,
+		OperatorID: operator.OperatorID,
+		Name:       operator.Name,
+		Lines:      nil, // TODO: implement recursive calls to Lines
 	}, nil
 }
 
@@ -70,7 +94,6 @@ func (r *queryResolver) StopsForLine(ctx context.Context, operatorID string, lin
 		r.stops = append(r.stops, formattedStop)
 	}
 	return r.stops, nil
-
 }
 
 // Query returns QueryResolver implementation.
