@@ -5,9 +5,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/cpreciad/transit/internal/consolidator"
-	"github.com/cpreciad/transit/internal/helpers"
-	"github.com/cpreciad/transit/internal/parser"
+	"github.com/cpreciad/transit/cmd/transit/duboce/consolidator"
+	"github.com/cpreciad/transit/cmd/transit/duboce/dubocehelpers"
+	"github.com/cpreciad/transit/cmd/transit/duboce/parser"
 )
 
 const (
@@ -41,7 +41,7 @@ func display(infos []*consolidator.Info) {
 			fmt.Printf("%s line (%s) train times for %s:\n", i.Line, i.Direction, i.StopName)
 		}
 		for stopInfo := i; stopInfo != nil; stopInfo = stopInfo.Next {
-			t, err := helpers.UTCtoPST(stopInfo.ExpectedTime)
+			t, err := dubocehelpers.UTCtoPST(stopInfo.ExpectedTime)
 			if err != nil {
 				log.Println(err)
 			}
@@ -64,7 +64,7 @@ func display(infos []*consolidator.Info) {
 		}
 
 		for stopInfo := i; stopInfo != nil; stopInfo = stopInfo.Next {
-			t, err := helpers.UTCtoPST(stopInfo.ExpectedTime)
+			t, err := dubocehelpers.UTCtoPST(stopInfo.ExpectedTime)
 			if err != nil {
 				log.Println(err)
 			}
