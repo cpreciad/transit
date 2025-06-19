@@ -20,6 +20,11 @@ const (
 
 type apiQueryEngine struct{}
 
+func NewApiQueryEngine() *apiQueryEngine {
+	return &apiQueryEngine{}
+}
+
+// TODO: figure out how to make factory functions for each transit type
 func (a *apiQueryEngine) GetOperatorID() (map[qe.ID]qe.Operator, error) {
 
 	// get the body of the request to the url
@@ -35,10 +40,6 @@ func (a *apiQueryEngine) GetOperatorID() (map[qe.ID]qe.Operator, error) {
 	}
 
 	return out, nil
-}
-
-func NewApiQueryEngine() *apiQueryEngine {
-	return &apiQueryEngine{}
 }
 
 func fetchData() ([]byte, error) {
@@ -66,6 +67,7 @@ func fetchData() ([]byte, error) {
 
 }
 
+// TODO: make this generic by passing in a map type, possibly use a fatory func to map particulars
 func formatApiData(data []byte) (map[qe.ID]qe.Operator, error) {
 	var unpackedOperators []model.Operator
 	if err := json.Unmarshal(data, &unpackedOperators); err != nil {

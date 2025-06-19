@@ -10,8 +10,8 @@ import (
 	"sort"
 	"strconv"
 
+	"github.com/cpreciad/transit/cmd/transit/duboce/consolidator"
 	"github.com/cpreciad/transit/graph/model"
-	"github.com/cpreciad/transit/internal/consolidator"
 	qe "github.com/cpreciad/transit/query_engine"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )

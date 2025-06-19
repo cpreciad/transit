@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/cpreciad/transit/internal/consolidator/backup"
-	"github.com/cpreciad/transit/internal/parser"
-	"github.com/cpreciad/transit/internal/request"
+	"github.com/cpreciad/transit/cmd/transit/duboce/consolidator/backup"
+	"github.com/cpreciad/transit/cmd/transit/duboce/parser"
+	"github.com/cpreciad/transit/cmd/transit/duboce/request"
 )
 
 type Info struct {
@@ -20,6 +20,7 @@ type direction struct {
 
 func GetStopInfo(operatorId, lineId string, stops map[string][]string) []*Info {
 	body, err := request.RequestStops(operatorId, lineId)
+
 	if err != nil {
 		log.Printf("consolidator: request for fresh stop data for %s-%s failed: %v\n", operatorId, lineId, err)
 		log.Println("consolidator: attempting to load backup data")
@@ -92,6 +93,7 @@ func handleBackup(fileName string, body []byte) ([]byte, error) {
 	if body != nil {
 		// success was seen, we'll write this to disc
 		err := backup.StoreBackup(fileName, body)
+
 		if err != nil {
 			// we won't panic on error here, just log the fail to backup
 			log.Printf("consolidator: failed to store backup for %s to disc: %v\n", fileName, err)
