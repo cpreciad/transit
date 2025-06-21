@@ -14,4 +14,5 @@ import (
 type Resolver struct {
 	QueryEngine queryengine.QueryEngine
 	operators   []*model.Operator
+	lines       []*model.Line
 }

@@ -39,6 +39,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Operator() OperatorResolver
 	Query() QueryResolver
 }
 
@@ -72,6 +73,9 @@ type ComplexityRoot struct {
 	}
 }
 
+type OperatorResolver interface {
+	Lines(ctx context.Context, obj *model.Operator) ([]*model.Line, error)
+}
 type QueryResolver interface {
 	Operators(ctx context.Context, order *model.SortOrder) ([]*model.Operator, error)
 	Operator(ctx context.Context, id string) (*model.Operator, error)
@@ -804,7 +808,7 @@ func (ec *executionContext) _Operator_lines(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Lines, nil
+		return ec.resolvers.Operator().Lines(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -825,8 +829,8 @@ func (ec *executionContext) fieldContext_Operator_lines(_ context.Context, field
 	fc = &graphql.FieldContext{
 		Object:     "Operator",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -3261,23 +3265,54 @@ func (ec *executionContext) _Operator(ctx context.Context, sel ast.SelectionSet,
 		case "id":
 			out.Values[i] = ec._Operator_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "operatorId":
 			out.Values[i] = ec._Operator_operatorId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "name":
 			out.Values[i] = ec._Operator_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "lines":
-			out.Values[i] = ec._Operator_lines(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Operator_lines(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
 			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

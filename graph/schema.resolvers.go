@@ -49,7 +49,6 @@ func (r *queryResolver) Operators(ctx context.Context, order *model.SortOrder) (
 			ID:         string(opID),
 			OperatorID: op.OperatorID,
 			Name:       op.Name,
-			Lines:      nil, // TODO: implement recursive calls to Lines
 		})
 	}
 
@@ -73,11 +72,33 @@ func (r *queryResolver) Operator(ctx context.Context, id string) (*model.Operato
 		ID:         operator.ID,
 		OperatorID: operator.OperatorID,
 		Name:       operator.Name,
-		Lines:      nil, // TODO: implement recursive calls to Lines
 	}, nil
 }
+
+// Lines is the resolver for the lines field.
+func (r *operatorResolver) Lines(ctx context.Context, obj *model.Operator) ([]*model.Line, error) {
+	lines, err := r.QueryEngine.GetLineID(obj.OperatorID)
+	if err != nil {
+		slog.Error("QueryResolver", "Method", "Line", "Error", err.Error())
+		return nil, gqlerror.Errorf("Internal server error occurred")
+	}
+	for lID, line := range lines {
+		op := lines[lID]
+		slog.Info("line info: ", "id", string(lID), "lID", line.LineID, "name", op.Name)
+		r.lines = append(r.lines, &model.Line{
+			ID:     string(lID),
+			LineID: line.LineID,
+			Name:   line.Name,
+		})
+	}
+	return r.lines, nil
+}
+
+// Operator returns OperatorResolver implementation.
+func (r *Resolver) Operator() OperatorResolver { return &operatorResolver{r} }
 
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+type operatorResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
