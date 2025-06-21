@@ -10,7 +10,6 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/cpreciad/transit/cmd/transit/duboce/consolidator"
 	"github.com/cpreciad/transit/graph/model"
 	qe "github.com/cpreciad/transit/query_engine"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -76,24 +75,6 @@ func (r *queryResolver) Operator(ctx context.Context, id string) (*model.Operato
 		Name:       operator.Name,
 		Lines:      nil, // TODO: implement recursive calls to Lines
 	}, nil
-}
-
-// StopsForLine is the resolver for the stopsForLine field.
-func (r *queryResolver) StopsForLine(ctx context.Context, operatorID string, lineID string) ([]*model.Stop, error) {
-	stops := make(map[string][]string)
-	stops["Carl St & Cole St"] = make([]string, 0)
-	stops["Duboce St/Noe St/Duboce Park"] = make([]string, 0)
-	stopInfo := consolidator.GetStopInfo(operatorID, lineID, stops)
-
-	// construct the return for the stops
-	for _, stop := range stopInfo {
-		formattedStop := &model.Stop{
-			ID:   "1",
-			Name: stop.Direction.Outbound.StopName,
-		}
-		r.stops = append(r.stops, formattedStop)
-	}
-	return r.stops, nil
 }
 
 // Query returns QueryResolver implementation.

@@ -26,8 +26,18 @@ func (a *apiQueryEngine) GetOperatorID() (map[qe.ID]qe.Operator, error) {
 	return out, nil
 }
 
-func (a *apiQueryEngine) GetLineID(oid qe.ID) (map[qe.ID]qe.Line, error) {
-	return nil, nil
+func (a *apiQueryEngine) GetLineID(oid string) (map[qe.ID]qe.Line, error) {
+	// make the fetch function generic
+	fetch := func() ([]byte, error) {
+		return lineFetch(oid)
+	}
+
+	out, err := fetchAndFormatData(fetch, lineFormat, lineValidate)
+	if err != nil {
+		return nil, err
+	}
+
+	return out, nil
 }
 
 func fetchAndFormatData[K comparable, V qe.Operator | qe.Line](fetch func() ([]byte, error), format func([]byte) (map[K]V, error), validate func(map[K]V) error) (map[K]V, error) {
