@@ -11,7 +11,7 @@ type ID string
 
 type QueryEngine interface {
 	GetOperatorID() (map[ID]Operator, error)
-	// GetLineID(oid ID)
+	GetLineID(oid ID) (map[ID]Line, error)
 	// GetStopID(oid, lid string)
 	// GetStopMonintor(sid string)
 }
@@ -25,4 +25,10 @@ type Operator struct {
 	ID         string `json:"id"`
 	OperatorID string `json:"operatorid"`
 	Name       string `json:"name"`
+}
+
+type Line struct {
+	ID     string `json:"id"`
+	LineID string `json:"lineid"`
+	Name   string `json:"name"`
 }
