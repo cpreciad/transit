@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/cpreciad/transit/internal"
+	apiqe "github.com/cpreciad/transit/internal/api_query_engine"
 )
 
 // this is just to test the api query engine implementation
 func main() {
-	apiqe := internal.NewApiQueryEngine()
+	apiqe := apiqe.NewApiQueryEngine()
 	out, err := apiqe.GetOperatorID()
 	if err != nil {
 		slog.Error("ez error", "returned error:", err.Error())

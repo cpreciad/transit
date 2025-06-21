@@ -1,5 +1,10 @@
 package helpers
 
+import (
+	"fmt"
+	"os"
+)
+
 func CleanResponseBody(b []byte) []byte {
 	// https://en.wikipedia.org/wiki/Byte_order_mark
 	// check that the first three runes of the byte array are the Byte Order Mark
@@ -11,4 +16,16 @@ func CleanResponseBody(b []byte) []byte {
 		return b[3:]
 	}
 	return b
+}
+
+// checks if an API key exists as an error check
+func ConstructUrl(apiKeyEnv, url string) (string, error) {
+	apiKey := os.Getenv(apiKeyEnv)
+	if apiKey == "" {
+		return "", fmt.Errorf("ConstructUrl: %s env variable is not set", apiKeyEnv)
+	}
+
+	constructedUrl := fmt.Sprintf("%s?api_key=%s&format=json", url, apiKey)
+
+	return constructedUrl, nil
 }
