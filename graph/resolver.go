@@ -13,6 +13,6 @@ import (
 
 type Resolver struct {
 	QueryEngine queryengine.QueryEngine
-	stops       []*model.Stop
 	operators   []*model.Operator
+	lines       []*model.Line
 }

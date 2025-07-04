@@ -30,5 +30,4 @@ enum SortOrder {
 type Query {
   operators(order: SortOrder = ASC): [Operator!]!
   operator(id: ID!): Operator
-  stopsForLine(operatorID: ID!, lineID: ID!): [Stop!]!
 }

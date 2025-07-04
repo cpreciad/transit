@@ -39,6 +39,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Operator() OperatorResolver
 	Query() QueryResolver
 }
 
@@ -61,9 +62,8 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Operator     func(childComplexity int, id string) int
-		Operators    func(childComplexity int, order *model.SortOrder) int
-		StopsForLine func(childComplexity int, operatorID string, lineID string) int
+		Operator  func(childComplexity int, id string) int
+		Operators func(childComplexity int, order *model.SortOrder) int
 	}
 
 	Stop struct {
@@ -73,10 +73,12 @@ type ComplexityRoot struct {
 	}
 }
 
+type OperatorResolver interface {
+	Lines(ctx context.Context, obj *model.Operator) ([]*model.Line, error)
+}
 type QueryResolver interface {
 	Operators(ctx context.Context, order *model.SortOrder) ([]*model.Operator, error)
 	Operator(ctx context.Context, id string) (*model.Operator, error)
-	StopsForLine(ctx context.Context, operatorID string, lineID string) ([]*model.Stop, error)
 }
 
 type executableSchema struct {
@@ -177,18 +179,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Operators(childComplexity, args["order"].(*model.SortOrder)), true
-
-	case "Query.stopsForLine":
-		if e.complexity.Query.StopsForLine == nil {
-			break
-		}
-
-		args, err := ec.field_Query_stopsForLine_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.StopsForLine(childComplexity, args["operatorID"].(string), args["lineID"].(string)), true
 
 	case "Stop.id":
 		if e.complexity.Stop.ID == nil {
@@ -385,47 +375,6 @@ func (ec *executionContext) field_Query_operators_argsOrder(
 	}
 
 	var zeroVal *model.SortOrder
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_stopsForLine_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Query_stopsForLine_argsOperatorID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["operatorID"] = arg0
-	arg1, err := ec.field_Query_stopsForLine_argsLineID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["lineID"] = arg1
-	return args, nil
-}
-func (ec *executionContext) field_Query_stopsForLine_argsOperatorID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("operatorID"))
-	if tmp, ok := rawArgs["operatorID"]; ok {
-		return ec.unmarshalNID2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_stopsForLine_argsLineID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("lineID"))
-	if tmp, ok := rawArgs["lineID"]; ok {
-		return ec.unmarshalNID2string(ctx, tmp)
-	}
-
-	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -859,7 +808,7 @@ func (ec *executionContext) _Operator_lines(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Lines, nil
+		return ec.resolvers.Operator().Lines(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -880,8 +829,8 @@ func (ec *executionContext) fieldContext_Operator_lines(_ context.Context, field
 	fc = &graphql.FieldContext{
 		Object:     "Operator",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -1020,69 +969,6 @@ func (ec *executionContext) fieldContext_Query_operator(ctx context.Context, fie
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_operator_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_stopsForLine(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_stopsForLine(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().StopsForLine(rctx, fc.Args["operatorID"].(string), fc.Args["lineID"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.Stop)
-	fc.Result = res
-	return ec.marshalNStop2ᚕᚖgithubᚗcomᚋcpreciadᚋtransitᚋgraphᚋmodelᚐStopᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_stopsForLine(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Stop_id(ctx, field)
-			case "stopId":
-				return ec.fieldContext_Stop_stopId(ctx, field)
-			case "name":
-				return ec.fieldContext_Stop_name(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Stop", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_stopsForLine_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -3379,23 +3265,54 @@ func (ec *executionContext) _Operator(ctx context.Context, sel ast.SelectionSet,
 		case "id":
 			out.Values[i] = ec._Operator_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "operatorId":
 			out.Values[i] = ec._Operator_operatorId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "name":
 			out.Values[i] = ec._Operator_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "lines":
-			out.Values[i] = ec._Operator_lines(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Operator_lines(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
 			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3470,28 +3387,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_operator(ctx, field)
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "stopsForLine":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_stopsForLine(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 

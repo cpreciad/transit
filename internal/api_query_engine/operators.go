@@ -15,28 +15,27 @@ const (
 	operatorsUrl = "http://api.511.org/transit/operators"
 )
 
+// these struct fields need to be exported so the json lib sees them, idk
 type Operator struct {
 	OperatorID string `json:"Id"`
 	Name       string `json:"Name"`
 }
 
-func operatorFetch() ([]byte, error) {
-	url, err := helpers.ConstructUrl(apiKeyEnv, operatorsUrl)
-	if err != nil {
-		return nil, err
-	}
+func operatorFetch(apiKey string) ([]byte, error) {
+
+	url := fmt.Sprintf("%s?api_key=%s&format=json", operatorsUrl, apiKey)
 
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("fetchData: bad status code returned: %d", resp.StatusCode)
+		return nil, fmt.Errorf("operatorFetch: bad status code returned: %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("fetchData: %s", err.Error())
+		return nil, fmt.Errorf("operatorFetch: %s", err.Error())
 	}
 	body = helpers.CleanResponseBody(body)
 	resp.Body.Close()
@@ -47,10 +46,6 @@ func operatorFetch() ([]byte, error) {
 func operatorFormat(data []byte) (map[qe.ID]qe.Operator, error) {
 	var unpackedOperators []Operator
 	if err := json.Unmarshal(data, &unpackedOperators); err != nil {
-		return nil, fmt.Errorf("formatApiData: %w", err)
-	}
-
-	if err := validate(unpackedOperators); err != nil {
 		return nil, fmt.Errorf("formatApiData: %w", err)
 	}
 

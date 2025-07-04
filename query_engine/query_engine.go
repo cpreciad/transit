@@ -11,7 +11,8 @@ type ID string
 
 type QueryEngine interface {
 	GetOperatorID() (map[ID]Operator, error)
-	GetLineID(oid ID) (map[ID]Line, error)
+	// TODO: make oid more type specific
+	GetLineID(oid string) (map[ID]Line, error)
 	// GetStopID(oid, lid string)
 	// GetStopMonintor(sid string)
 }

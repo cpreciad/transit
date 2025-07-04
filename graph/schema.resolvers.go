@@ -6,11 +6,11 @@ package graph
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"sort"
 	"strconv"
 
-	"github.com/cpreciad/transit/cmd/transit/duboce/consolidator"
 	"github.com/cpreciad/transit/graph/model"
 	qe "github.com/cpreciad/transit/query_engine"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -50,7 +50,6 @@ func (r *queryResolver) Operators(ctx context.Context, order *model.SortOrder) (
 			ID:         string(opID),
 			OperatorID: op.OperatorID,
 			Name:       op.Name,
-			Lines:      nil, // TODO: implement recursive calls to Lines
 		})
 	}
 
@@ -74,29 +73,34 @@ func (r *queryResolver) Operator(ctx context.Context, id string) (*model.Operato
 		ID:         operator.ID,
 		OperatorID: operator.OperatorID,
 		Name:       operator.Name,
-		Lines:      nil, // TODO: implement recursive calls to Lines
 	}, nil
 }
 
-// StopsForLine is the resolver for the stopsForLine field.
-func (r *queryResolver) StopsForLine(ctx context.Context, operatorID string, lineID string) ([]*model.Stop, error) {
-	stops := make(map[string][]string)
-	stops["Carl St & Cole St"] = make([]string, 0)
-	stops["Duboce St/Noe St/Duboce Park"] = make([]string, 0)
-	stopInfo := consolidator.GetStopInfo(operatorID, lineID, stops)
-
-	// construct the return for the stops
-	for _, stop := range stopInfo {
-		formattedStop := &model.Stop{
-			ID:   "1",
-			Name: stop.Direction.Outbound.StopName,
-		}
-		r.stops = append(r.stops, formattedStop)
+// Lines is the resolver for the lines field.
+func (r *operatorResolver) Lines(ctx context.Context, obj *model.Operator) ([]*model.Line, error) {
+	lines, err := r.QueryEngine.GetLineID(obj.OperatorID)
+	var l []*model.Line
+	if err != nil {
+		slog.Error("QueryResolver", "Method", "Line", "Error", err.Error())
+		return nil, gqlerror.Errorf("Internal server error occurred")
 	}
-	return r.stops, nil
+	for lID, line := range lines {
+		l = append(l, &model.Line{
+			ID:     string(lID),
+			LineID: line.LineID,
+			Name:   line.Name,
+		})
+	}
+	r.lines = l
+	fmt.Printf("size of r.lines for operator id: %s: %d\n", obj.OperatorID, len(r.lines))
+	return r.lines, nil
 }
+
+// Operator returns OperatorResolver implementation.
+func (r *Resolver) Operator() OperatorResolver { return &operatorResolver{r} }
 
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+type operatorResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
