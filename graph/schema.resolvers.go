@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"sort"
 	"strconv"
@@ -78,19 +79,20 @@ func (r *queryResolver) Operator(ctx context.Context, id string) (*model.Operato
 // Lines is the resolver for the lines field.
 func (r *operatorResolver) Lines(ctx context.Context, obj *model.Operator) ([]*model.Line, error) {
 	lines, err := r.QueryEngine.GetLineID(obj.OperatorID)
+	var l []*model.Line
 	if err != nil {
 		slog.Error("QueryResolver", "Method", "Line", "Error", err.Error())
 		return nil, gqlerror.Errorf("Internal server error occurred")
 	}
 	for lID, line := range lines {
-		op := lines[lID]
-		slog.Info("line info: ", "id", string(lID), "lID", line.LineID, "name", op.Name)
-		r.lines = append(r.lines, &model.Line{
+		l = append(l, &model.Line{
 			ID:     string(lID),
 			LineID: line.LineID,
 			Name:   line.Name,
 		})
 	}
+	r.lines = l
+	fmt.Printf("size of r.lines for operator id: %s: %d\n", obj.OperatorID, len(r.lines))
 	return r.lines, nil
 }
 
