@@ -33,6 +33,9 @@ go generate ./...
 
 This command is generally used to genarate code generically in go, but for our purposes with the gql library, it works equally as well
 
+#### Fine tuning the resolvers
+One thing to keep in mind when extending the gql resolvers is that gqlgen.yml is responsible for configuring how each sub-dependency is resolved. if you don't specify that you want a particular gql object to be manualy resolved, you won't have control over any part of it, which importantly means that you can't really populate the important fields. To extend the resolvers for nested objects, you can look at what is done for [line objects embeded within operator objects](https://github.com/cpreciad/transit/blob/815f575b33a68738881104660fb5968bb5c1b968/gqlgen.yml#L156-L159). After adding, you'll want to re-generate everything again, and implement the new resolvers... etc 
+
 #### Running the gql server
 
 Pretty simple as well for now. Run the following command
