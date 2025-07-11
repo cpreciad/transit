@@ -78,6 +78,9 @@ func (r *queryResolver) Operator(ctx context.Context, id string) (*model.Operato
 
 // Lines is the resolver for the lines field.
 func (r *operatorResolver) Lines(ctx context.Context, obj *model.Operator) ([]*model.Line, error) {
+	if lines, ok := r.lines[obj.OperatorID]; ok {
+		return lines, nil
+	}
 	lines, err := r.QueryEngine.GetLineID(obj.OperatorID)
 	var l []*model.Line
 	if err != nil {
@@ -91,9 +94,9 @@ func (r *operatorResolver) Lines(ctx context.Context, obj *model.Operator) ([]*m
 			Name:   line.Name,
 		})
 	}
-	r.lines = l
+	r.lines[obj.OperatorID] = l
 	fmt.Printf("size of r.lines for operator id: %s: %d\n", obj.OperatorID, len(r.lines))
-	return r.lines, nil
+	return r.lines[obj.OperatorID], nil
 }
 
 // Operator returns OperatorResolver implementation.

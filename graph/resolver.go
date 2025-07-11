@@ -13,6 +13,11 @@ import (
 
 type Resolver struct {
 	QueryEngine queryengine.QueryEngine
-	operators   []*model.Operator
-	lines       []*model.Line
+	// TODO: update these to store data more efficiently
+	// these don't need to be updated nearly as often, so
+	// a data structure that allows quicker loading will be better
+	// map[id][]*model.Operator
+	operators []*model.Operator
+	// map[id][]*model.Line
+	lines map[string][]*model.Line
 }
