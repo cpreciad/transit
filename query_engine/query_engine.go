@@ -9,11 +9,13 @@ package queryengine
 // they're doing, or something like that
 type ID string
 
+// TODO: Make a decision on how to better ensure type safety
+
 type QueryEngine interface {
 	GetOperatorID() (map[ID]Operator, error)
 	// TODO: make oid more type specific
 	GetLineID(oid string) (map[ID]Line, error)
-	// GetStopID(oid, lid string)
+	// GetStopID(oid, lid string) (map[ID]Stop, error)
 	// GetStopMonintor(sid string)
 }
 
@@ -33,3 +35,11 @@ type Line struct {
 	LineID string `json:"lineid"`
 	Name   string `json:"name"`
 }
+
+/*
+type Stop struct {
+	ID     string `json:"id"`
+	LineID string `json:"stopid"`
+	Name   string `json:"name"`
+}
+*/

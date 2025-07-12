@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"sort"
 	"strconv"
@@ -18,7 +17,7 @@ import (
 
 // Operators is the resolver for the operators field.
 func (r *queryResolver) Operators(ctx context.Context, order *model.SortOrder) ([]*model.Operator, error) {
-	operators, err := r.QueryEngine.GetOperatorID()
+	operators, err := r.queryEngine.GetOperatorID()
 	if err != nil {
 		slog.Error("QueryResolver", "Method", "Operator", "Error", err.Error())
 		return nil, gqlerror.Errorf("Internal server error occurred")
@@ -58,7 +57,7 @@ func (r *queryResolver) Operators(ctx context.Context, order *model.SortOrder) (
 
 // Operator is the resolver for the operator field.
 func (r *queryResolver) Operator(ctx context.Context, id string) (*model.Operator, error) {
-	operators, err := r.QueryEngine.GetOperatorID()
+	operators, err := r.queryEngine.GetOperatorID()
 	if err != nil {
 		slog.Error("QueryResolver", "Method", "Operator", "Error", err.Error())
 		return nil, gqlerror.Errorf("Internal server error occurred")
@@ -78,10 +77,15 @@ func (r *queryResolver) Operator(ctx context.Context, id string) (*model.Operato
 
 // Lines is the resolver for the lines field.
 func (r *operatorResolver) Lines(ctx context.Context, obj *model.Operator) ([]*model.Line, error) {
+
+	// do a quick lookup in case the last lookup is in memory
+	// its probably fine that this doesn't fetch more than once
+	// as the data shouldn't change hardly ever
 	if lines, ok := r.lines[obj.OperatorID]; ok {
 		return lines, nil
 	}
-	lines, err := r.QueryEngine.GetLineID(obj.OperatorID)
+
+	lines, err := r.queryEngine.GetLineID(obj.OperatorID)
 	var l []*model.Line
 	if err != nil {
 		slog.Error("QueryResolver", "Method", "Line", "Error", err.Error())
@@ -95,7 +99,6 @@ func (r *operatorResolver) Lines(ctx context.Context, obj *model.Operator) ([]*m
 		})
 	}
 	r.lines[obj.OperatorID] = l
-	fmt.Printf("size of r.lines for operator id: %s: %d\n", obj.OperatorID, len(r.lines))
 	return r.lines[obj.OperatorID], nil
 }
 
