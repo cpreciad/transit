@@ -1,26 +1,14 @@
 package apiqe
 
 import (
-	"fmt"
-	"os"
-
 	qe "github.com/cpreciad/transit/query_engine"
-)
-
-const (
-	apiKeyEnv = "TRANSIT_DATA_API_KEY"
 )
 
 type apiQueryEngine struct {
 	apiKey string
 }
 
-func NewApiQueryEngine() *apiQueryEngine {
-	apiKey := os.Getenv(apiKeyEnv)
-	if apiKey == "" {
-		panicMessage := fmt.Sprintf("NewApiQueryEngine: an api key is not mapped to the env variable %s. Please go to 511.org, register for an api key, and set it to the listed env variable", apiKeyEnv)
-		panic(panicMessage)
-	}
+func NewApiQueryEngine(apiKey string) *apiQueryEngine {
 	return &apiQueryEngine{
 		apiKey: apiKey,
 	}

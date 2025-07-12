@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -15,7 +16,10 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
-const defaultPort = "8080"
+const (
+	defaultPort = "8080"
+	apiKeyEnv   = "TRANSIT_DATA_API_KEY"
+)
 
 func main() {
 	port := os.Getenv("PORT")
@@ -23,11 +27,17 @@ func main() {
 		port = defaultPort
 	}
 
+	apiKey := os.Getenv(apiKeyEnv)
+	if apiKey == "" {
+		panicMessage := fmt.Sprintf("NewApiQueryEngine: an api key is not mapped to the env variable %s. Please go to 511.org, register for an api key, and set it to the listed env variable", apiKeyEnv)
+		panic(panicMessage)
+	}
+
 	// this should be where a resolver type should be injected
 
-	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
-		QueryEngine: apiqe.NewApiQueryEngine(),
-	}}))
+	srv := handler.New(graph.NewExecutableSchema(graph.Config{
+		Resolvers: graph.NewResolver(apiqe.NewApiQueryEngine(apiKey)),
+	}))
 
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
