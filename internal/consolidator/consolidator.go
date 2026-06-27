@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/cpreciad/transit/cmd/transit/duboce/consolidator/backup"
-	"github.com/cpreciad/transit/cmd/transit/duboce/parser"
-	"github.com/cpreciad/transit/cmd/transit/duboce/request"
+	"github.com/cpreciad/transit/internal/consolidator/backup"
+	"github.com/cpreciad/transit/internal/parser"
+	"github.com/cpreciad/transit/internal/request"
 )
 
 type Info struct {
+	StopName string
 	Direction *direction
 }
 
@@ -38,6 +39,9 @@ func GetStopInfo(operatorId, lineId string, stops map[string][]string) []*Info {
 	info := make([]*Info, 0)
 	for stop, stopIds := range stops {
 		// logs if there are missing or extra stops
+		i := &Info{
+			StopName: stop,
+		}
 		_ = validate(stop, stopIds)
 
 		var inbound, outbound *parser.ConciseStopInfo = nil, nil
@@ -55,7 +59,8 @@ func GetStopInfo(operatorId, lineId string, stops map[string][]string) []*Info {
 
 			stopInfo, err := parser.ParseNextArrival(body, stopId)
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("%v: continuing to next stop", err)
+				continue
 			}
 			if stopInfo.Direction == "IB" {
 				inbound = stopInfo
@@ -64,12 +69,12 @@ func GetStopInfo(operatorId, lineId string, stops map[string][]string) []*Info {
 			}
 		}
 
-		info = append(info, &Info{
-			Direction: &direction{
+		i.Direction = &direction{
 				Inbound:  inbound,
 				Outbound: outbound,
-			},
-		})
+		}
+
+		info = append(info, i)
 
 	}
 	return info

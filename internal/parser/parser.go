@@ -4,6 +4,8 @@ package parser
 import (
 	"encoding/json"
 	"fmt"
+	"time"
+	"github.com/cpreciad/transit/internal/helpers"
 )
 
 type ConciseStopInfo struct {
@@ -11,7 +13,7 @@ type ConciseStopInfo struct {
 	Line         string
 	StopName     string
 	Direction    string
-	ExpectedTime string
+	ExpectedTime time.Time
 	Location     Location
 	Next         *ConciseStopInfo
 }
@@ -76,7 +78,7 @@ func parseRestructureTimes(stopMonitoringJson StopMonitoringJSON) *ConciseStopIn
 			Line:         object.MonitoredVehicleJourney.LineRef,
 			StopName:     object.MonitoredVehicleJourney.MonitoredCall.StopPointName,
 			Direction:    object.MonitoredVehicleJourney.DirectionRef,
-			ExpectedTime: object.MonitoredVehicleJourney.MonitoredCall.ExpectedArrivalTime,
+			ExpectedTime: timeOrEmpty(object.MonitoredVehicleJourney.MonitoredCall.ExpectedArrivalTime),
 			Location:     object.MonitoredVehicleJourney.VehicleLocation,
 			Next:         nil,
 		}
@@ -85,4 +87,12 @@ func parseRestructureTimes(stopMonitoringJson StopMonitoringJSON) *ConciseStopIn
 	}
 
 	return dummy.Next
+}
+
+func timeOrEmpty(timeString string) time.Time{
+	t, err := helpers.UTCtoPST(timeString)
+	if err != nil{
+		return time.Time{}
+	}
+	return t
 }

@@ -1,0 +1,90 @@
+package fetch
+
+import (
+	"fmt"
+	"time"
+	"log"
+	"github.com/cpreciad/transit/internal/consolidator"
+	"github.com/cpreciad/transit/internal/parser"
+
+)
+
+// 3 is to take into account for the consistent time it takes for the
+// N to travel through the tunnel between Cole valley to Duboce Park
+const TunnelTime = time.Duration(3) * time.Minute
+
+func DisplayDuboce(){
+	info := fetchDuboce()
+	display(info.Direction.Inbound)
+	display(info.Direction.Outbound)
+	
+}
+
+func display(i *parser.ConciseStopInfo){
+	if i == nil {
+		fmt.Println("no more stops for the day")
+		return
+	}
+	var arrow string
+	var destination string
+
+	switch i.Direction {
+		case "IB":
+			arrow = "<=="
+			destination = "The Ball Park"
+		case "OB":
+			arrow = "==>"
+			destination = "Ocean Beach"
+		default:
+			fmt.Println("unknown direction")
+			return 
+	}
+	fmt.Printf("%s line train times arriving at Duboce Park, towards %s\n", i.Line, destination) 
+	for stopInfo := i; stopInfo != nil; stopInfo = stopInfo.Next {
+		t := stopInfo.ExpectedTime
+		formattedTime := t.Format(time.Kitchen)
+		if stopInfo.Next == nil {
+			fmt.Printf("%s\n\n", formattedTime)
+		} else {
+			fmt.Printf("%s %s ", formattedTime, arrow)
+		}
+	}
+}
+
+func fetchDuboce() *consolidator.Info{
+	operatorId  := "SF"
+	lineId      := "N"
+	// turns out that for the same stop location, there are different IDs and names 
+	// associated with it. I figured this out by going online to munis website,
+	// seeing that the two different ids correlated to the same stop, and found 
+	// the correct names to use
+	outboundStopName  := "Duboce St/Noe St/Duboce Park"
+	inboundStopName := "Sunset Tunnel East Portal"
+
+	stops := make(map[string][]string)
+	stops[outboundStopName] = make([]string, 0)
+	stops[inboundStopName ] = make([]string, 0)
+
+	allInfo := fetch(operatorId, lineId, stops) 
+	
+	duboceInfo := allInfo[outboundStopName]
+
+	if duboceInfo.Direction.Inbound == nil{	
+		duboceInfo.Direction.Inbound = allInfo[inboundStopName].Direction.Inbound
+	}
+
+	return duboceInfo
+}
+
+func fetch (operatorId, lineId string, stops map[string][]string) map[string]*consolidator.Info{
+	infoMap := make(map[string]*consolidator.Info)
+	for _, info := range consolidator.GetStopInfo(operatorId, lineId, stops){
+		stopName := info.StopName
+		if stopName == "" {
+			log.Printf("fetch: could not derrive stop name from info")
+		}
+		infoMap[stopName] = info
+	} 
+	return infoMap
+}
+

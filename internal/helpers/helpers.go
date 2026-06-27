@@ -1,31 +1,21 @@
 package helpers
 
 import (
-	"fmt"
-	"os"
+	"time"
 )
 
-func CleanResponseBody(b []byte) []byte {
-	// https://en.wikipedia.org/wiki/Byte_order_mark
-	// check that the first three runes of the byte array are the Byte Order Mark
-	// of UTF-8, and return a byte array that trims these off
-	if len(b) >= 3 &&
-		b[0] == 0xef &&
-		b[1] == 0xbb &&
-		b[2] == 0xbf {
-		return b[3:]
-	}
-	return b
-}
+func UTCtoPST(utcTime string) (time.Time, error) {
 
-// checks if an API key exists as an error check
-func ConstructUrl(apiKeyEnv, url string) (string, error) {
-	apiKey := os.Getenv(apiKeyEnv)
-	if apiKey == "" {
-		return "", fmt.Errorf("ConstructUrl: %s env variable is not set", apiKeyEnv)
+	pst, err := time.LoadLocation("America/Los_Angeles")
+	if err != nil {
+		return time.Time{}, err
 	}
 
-	constructedUrl := fmt.Sprintf("%s?api_key=%s&format=json", url, apiKey)
+	t, err := time.Parse(time.RFC3339, utcTime)
+	if err != nil {
+		return time.Time{}, err
+	}
+	t = t.In(pst)
 
-	return constructedUrl, nil
+	return t, nil
 }
