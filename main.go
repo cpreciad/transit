@@ -5,5 +5,6 @@ import (
 )
 
 func main(){
-	fetch.DisplayDuboce()
+	fetch.DisplayDubocePST()
+	fetch.DisplayDuboceIoT()
 }

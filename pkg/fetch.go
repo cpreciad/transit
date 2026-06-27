@@ -11,16 +11,54 @@ import (
 
 // 3 is to take into account for the consistent time it takes for the
 // N to travel through the tunnel between Cole valley to Duboce Park
-const TunnelTime = time.Duration(3) * time.Minute
+const (
+	TunnelTime = time.Duration(3) * time.Minute
+)
 
-func DisplayDuboce(){
+func DisplayDuboceIoT(){
 	info := fetchDuboce()
-	display(info.Direction.Inbound)
-	display(info.Direction.Outbound)
-	
+	stringy := getIOTString(info.Direction.Inbound)
+	fmt.Println(stringy)
 }
 
-func display(i *parser.ConciseStopInfo){
+func DisplayDubocePST(){
+	info := fetchDuboce()
+	displayPst(info.Direction.Inbound)
+	displayPst(info.Direction.Outbound)
+}
+
+// limited space means 
+func getIOTString(i *parser.ConciseStopInfo) string{
+	if i == nil {
+		return fmt.Sprintf("no more stops for the day")
+	}
+	var destination string
+
+	switch i.Direction {
+		case "IB":
+			destination = "Ball Park"
+		case "OB":
+			destination = "Ocean Beach"
+		default:
+			return fmt.Sprintf("unknown direction")
+	}
+
+	iotString := fmt.Sprintf("%s, towards %s\n", i.Line, destination) 
+	for stopInfo := i; stopInfo != nil; stopInfo = stopInfo.Next {
+		t := stopInfo.ExpectedTime
+		minutesTil := time.Until(t).Minutes()
+		formattedTime := fmt.Sprintf("%.0f", minutesTil)
+
+		if stopInfo.Next == nil {
+			iotString = iotString + fmt.Sprintf("%s\n\n", formattedTime)
+		} else {
+			iotString = iotString + fmt.Sprintf("%s, ", formattedTime)
+		}
+	}
+	return iotString
+}
+
+func displayPst(i *parser.ConciseStopInfo){
 	if i == nil {
 		fmt.Println("no more stops for the day")
 		return
@@ -31,7 +69,7 @@ func display(i *parser.ConciseStopInfo){
 	switch i.Direction {
 		case "IB":
 			arrow = "<=="
-			destination = "The Ball Park"
+			destination = "the Ball Park"
 		case "OB":
 			arrow = "==>"
 			destination = "Ocean Beach"
@@ -39,10 +77,13 @@ func display(i *parser.ConciseStopInfo){
 			fmt.Println("unknown direction")
 			return 
 	}
-	fmt.Printf("%s line train times arriving at Duboce Park, towards %s\n", i.Line, destination) 
+	fmt.Printf("%s, towards %s: arrival times at Duboce Park\n", i.Line, destination) 
 	for stopInfo := i; stopInfo != nil; stopInfo = stopInfo.Next {
 		t := stopInfo.ExpectedTime
-		formattedTime := t.Format(time.Kitchen)
+		kitchenTime := t.Format(time.Kitchen)
+		minutesTil := time.Until(t).Minutes()
+		formattedTime := fmt.Sprintf("%s (in %.0f minutes)", kitchenTime, minutesTil)
+
 		if stopInfo.Next == nil {
 			fmt.Printf("%s\n\n", formattedTime)
 		} else {
