@@ -15,10 +15,9 @@ const (
 	TunnelTime = time.Duration(3) * time.Minute
 )
 
-func DisplayDuboceIoT(){
+func DisplayDuboceIoT() string{
 	info := fetchDuboce()
-	stringy := getIOTString(info.Direction.Inbound)
-	fmt.Println(stringy)
+	return getIOTString(info.Direction.Inbound)
 }
 
 func DisplayDubocePST(){
@@ -27,7 +26,10 @@ func DisplayDubocePST(){
 	displayPst(info.Direction.Outbound)
 }
 
-// limited space means 
+// getIOTString - returns a single string with newlines with the following format: 
+//              - : N, to Ball Park
+//                  10, 12, 29
+// input is a conciseStopInfo. I hate that I made a ConciseStopInfo as a function of direction fml
 func getIOTString(i *parser.ConciseStopInfo) string{
 	if i == nil {
 		return fmt.Sprintf("no more stops for the day")
@@ -43,14 +45,14 @@ func getIOTString(i *parser.ConciseStopInfo) string{
 			return fmt.Sprintf("unknown direction")
 	}
 
-	iotString := fmt.Sprintf("%s, to %s\n", i.Line, destination) 
+	iotString := fmt.Sprintf("%s, to %s\n", i.Line, destination)
 	for stopInfo := i; stopInfo != nil; stopInfo = stopInfo.Next {
 		t := stopInfo.ExpectedTime
 		minutesTil := time.Until(t).Minutes()
 		formattedTime := fmt.Sprintf("%.0f", minutesTil)
 
 		if stopInfo.Next == nil {
-			iotString = iotString + fmt.Sprintf("%s\n\n", formattedTime)
+			iotString = iotString + fmt.Sprintf("%s", formattedTime)
 		} else {
 			iotString = iotString + fmt.Sprintf("%s, ", formattedTime)
 		}
