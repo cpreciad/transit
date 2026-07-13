@@ -6,5 +6,4 @@ import (
 
 func main(){
 	fetch.DisplayDubocePST()
-	fetch.DisplayDuboceIoT()
 }
