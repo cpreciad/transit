@@ -42,8 +42,6 @@ func GetStopInfo(operatorId, lineId string, stops map[string][]string) []*Info {
 		i := &Info{
 			StopName: stop,
 		}
-		_ = validate(stop, stopIds)
-
 		var inbound, outbound *parser.ConciseStopInfo = nil, nil
 		for _, stopId := range stopIds {
 			body, err := request.RequestNextArrivals(operatorId, stopId)
@@ -78,20 +76,6 @@ func GetStopInfo(operatorId, lineId string, stops map[string][]string) []*Info {
 
 	}
 	return info
-}
-
-func validate(stop string, stopIds []string) error {
-	var err error
-	if len(stopIds) < 2 {
-		err = fmt.Errorf("consolidator: %s has missing stop data, see logs", stop)
-	} else if len(stopIds) > 2 {
-		err = fmt.Errorf("consolidator: %s has extra stop data, see logs", stop)
-	}
-	if err != nil {
-		log.Println(err)
-		log.Println("consolidator: stopIds for ", stop, stopIds)
-	}
-	return err
 }
 
 func handleBackup(fileName string, body []byte) ([]byte, error) {

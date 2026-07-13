@@ -43,7 +43,7 @@ func getIOTString(i *parser.ConciseStopInfo) string{
 			return fmt.Sprintf("unknown direction")
 	}
 
-	iotString := fmt.Sprintf("%s, towards %s\n", i.Line, destination) 
+	iotString := fmt.Sprintf("%s, to %s\n", i.Line, destination) 
 	for stopInfo := i; stopInfo != nil; stopInfo = stopInfo.Next {
 		t := stopInfo.ExpectedTime
 		minutesTil := time.Until(t).Minutes()
