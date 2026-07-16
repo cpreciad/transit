@@ -10,7 +10,7 @@ import (
 const (
     portName         = "/dev/serial0"
     TICK_INTERVAL    = 25 * time.Second
-    TIMEOUT_INTERVAL = 2 * time.Minute
+    TIMEOUT_INTERVAL = 2 * time.Hour
 )
 
 type driver struct {
