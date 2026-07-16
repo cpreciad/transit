@@ -3,7 +3,7 @@ package fetch
 import (
 	"fmt"
 	"time"
-	"log"
+    "errors"
 	"github.com/cpreciad/transit/internal/consolidator"
 	"github.com/cpreciad/transit/internal/parser"
 
@@ -15,13 +15,16 @@ const (
 	TunnelTime = time.Duration(3) * time.Minute
 )
 
-func DisplayDuboceIoT() string{
-	info := fetchDuboce()
-	return getIOTString(info.Direction.Inbound)
+func DisplayDuboceIoT() ([]byte, error){
+	info, err := fetchDuboce()
+    if err != nil{
+        return []byte{}, err
+    }
+	return []byte(getIOTString(info.Direction.Inbound)), nil
 }
 
 func DisplayDubocePST(){
-	info := fetchDuboce()
+	info, _ := fetchDuboce()
 	displayPst(info.Direction.Inbound)
 	displayPst(info.Direction.Outbound)
 }
@@ -77,9 +80,9 @@ func displayPst(i *parser.ConciseStopInfo){
 			destination = "Ocean Beach"
 		default:
 			fmt.Println("unknown direction")
-			return 
+			return
 	}
-	fmt.Printf("%s, towards %s: arrival times at Duboce Park\n", i.Line, destination) 
+	fmt.Printf("%s, towards %s: arrival times at Duboce Park\n", i.Line, destination)
 	for stopInfo := i; stopInfo != nil; stopInfo = stopInfo.Next {
 		t := stopInfo.ExpectedTime
 		kitchenTime := t.Format(time.Kitchen)
@@ -94,7 +97,7 @@ func displayPst(i *parser.ConciseStopInfo){
 	}
 }
 
-func fetchDuboce() *consolidator.Info{
+func fetchDuboce() (*consolidator.Info, error){
 	operatorId  := "SF"
 	lineId      := "N"
 	// turns out that for the same stop location, there are different IDs and names 
@@ -108,26 +111,26 @@ func fetchDuboce() *consolidator.Info{
 	stops[outboundStopName] = make([]string, 0)
 	stops[inboundStopName ] = make([]string, 0)
 
-	allInfo := fetch(operatorId, lineId, stops) 
-	
+	allInfo, err := fetch(operatorId, lineId, stops)
+
 	duboceInfo := allInfo[outboundStopName]
 
-	if duboceInfo.Direction.Inbound == nil{	
+	if duboceInfo.Direction.Inbound == nil{
 		duboceInfo.Direction.Inbound = allInfo[inboundStopName].Direction.Inbound
 	}
 
-	return duboceInfo
+	return duboceInfo, err
 }
 
-func fetch (operatorId, lineId string, stops map[string][]string) map[string]*consolidator.Info{
+func fetch (operatorId, lineId string, stops map[string][]string) (map[string]*consolidator.Info, error){
 	infoMap := make(map[string]*consolidator.Info)
 	for _, info := range consolidator.GetStopInfo(operatorId, lineId, stops){
 		stopName := info.StopName
 		if stopName == "" {
-			log.Printf("fetch: could not derrive stop name from info")
+            return nil, errors.New("fetch: could not derrive stop name from info")
 		}
 		infoMap[stopName] = info
-	} 
-	return infoMap
+	}
+	return infoMap, nil
 }
 
