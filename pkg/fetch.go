@@ -3,7 +3,6 @@ package fetch
 import (
 	"fmt"
 	"time"
-    "errors"
 	"github.com/cpreciad/transit/internal/consolidator"
 	"github.com/cpreciad/transit/internal/parser"
 
@@ -124,10 +123,15 @@ func fetchDuboce() (*consolidator.Info, error){
 
 func fetch (operatorId, lineId string, stops map[string][]string) (map[string]*consolidator.Info, error){
 	infoMap := make(map[string]*consolidator.Info)
-	for _, info := range consolidator.GetStopInfo(operatorId, lineId, stops){
+    infos, err := consolidator.GetStopInfo(operatorId, lineId, stops)
+    if err != nil{
+        return nil, fmt.Errorf("fetch: failed to get stop info: %v", err)
+    }
+
+	for _, info := range infos{
 		stopName := info.StopName
 		if stopName == "" {
-            return nil, errors.New("fetch: could not derrive stop name from info")
+            return nil, fmt.Errorf("fetch: could not derrive stop name from info")
 		}
 		infoMap[stopName] = info
 	}

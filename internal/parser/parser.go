@@ -34,8 +34,8 @@ func ParseStopID(data []byte, stops map[string][]string) error {
 	return nil
 }
 
-// ParseNextArrival - takes a byte slice and parses the next predicted times for the line
-func ParseNextArrival(data []byte, stopId string) (*ConciseStopInfo, error) {
+// ParseUpcomingArrivals - takes a byte slice and parses the upcoming predicted times for the line
+func ParseUpcomingArrivals(data []byte, stopId string) (*ConciseStopInfo, error) {
 	var stopMonitoringJson StopMonitoringJSON
 
 	err := json.Unmarshal(data, &stopMonitoringJson)
